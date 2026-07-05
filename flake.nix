@@ -2,7 +2,7 @@
   inputs.nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-26.05";
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   outputs =
-    { nixpkgs, ... }:
+    { nixpkgs, nixpkgs-stable, ... }:
     {
       withSelf =
         selfArg:
@@ -24,6 +24,29 @@
           fileThatExistsElse = fPath: els: fileThatExistsMapElse (_: _) els;
           firstLine = text: (builtins.head (builtins.split "\n" (builtins.readFile text)));
           firstLineOfFileElse = fPath: els: (fileThatExistsMapElse fPath firstLine els);
+
+          stableConf = nixpkgs-stable.lib.nixosSystem { modules = [ { pkgs, ... }:
+          let
+            nmAndBash = pkgs.writeShellScript "nmtuiBash" ''
+              ${pkgs.brightnessctl}/bin/brightnessctl set 50% || true;
+              nmtui;
+              /usr/bin/env bash;
+            '';
+            launchTerm = pkgs.writeShellScript "termSession" ''
+              exec ${pkgs.foot}/bin/foot ${nmAndBash}
+            '';
+          in {
+            system.stateVersion = "26.05";
+            boot.loader.grub.enable = false;
+            services.desktopManager.gnome.enable = true;
+            services.displayManager.gdm.enable = true;
+            services.gnome.core-apps.enable = false;
+            services.cage.enable = true;
+            services.cage.user = "root";
+            networking.networkmanager.enable = true;
+            services.cage.program = launchTerm;
+            fonts.enableDefaultPackages = true;
+          } ]; };
 
           buildArg = {
             modules = [
