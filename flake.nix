@@ -74,7 +74,7 @@
               in {
                 huskyos.btrfsDevice = builtins.readFile btrfs-device;
                 huskyos.efiDevice = builtins.readFile efi-device;
-                huskyos.swapDevice = builtins.readFile swap-device;
+                huskyos.swapDevice = firstLineOfFileElse swap-device null;
                 huskyos.flakeFolder = selfArg.outPath;
                 huskyos.hardwareUri = hardware-configuration;
                 huskyos.keyboardLayout = firstLineOfFileElse keyboard-layout "us";
