@@ -15,7 +15,11 @@ how:
 - if sbctl is installed (with keys), efi files get signed.
 
 
-specs:
+fixed specs:
+- layout
+  - part1: FAT32, 8 (or 4) GB
+  - part2: BTRFS
+  - (part3: Swap)
 - btrfs partition to handle all big amounts of data and system files.
   - System Files reside on btrfs
 
