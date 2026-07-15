@@ -27,7 +27,7 @@
           firstLineOfFileElse = fPath: els: (fileThatExistsMapElse fPath firstLine els);
 
           stableConf = nixpkgs-stable.lib.nixosSystem { modules = [
-            hardware-configuration
+            { pkgs, lib, config, modulesPath, ... } : ( (import ./hardware-configuration {inherit pkgs lib config modulesPath;}) // { fileSystems = {}; } )
             ./filesystems.nix
             { pkgs, ... }: let
               nmAndBash = pkgs.writeShellScript "nmtuiBash" ''
