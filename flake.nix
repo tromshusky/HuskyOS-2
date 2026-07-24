@@ -6,7 +6,7 @@
       withSelf =
         selfArg:
         let
-          stateVersion = "26.05";
+          old-system = selfArg.outPath/old;
           keyboard-layout = "${selfArg.outPath}/KBD";
           hashed-root-password = "${selfArg.outPath}/RPW";
           btrfs-device = "${selfArg.outPath}/BTR";
@@ -31,6 +31,7 @@
               ./filesystems.nix
               ./configuration.nix
               in {
+                huskyos.oldSystem = selfArg.outPath/old;
                 huskyos.btrfsDevice = builtins.readFile btrfs-device;
                 huskyos.efiDevice = builtins.readFile efi-device;
                 huskyos.swapDevice = firstLineOfFileElse swap-device null;

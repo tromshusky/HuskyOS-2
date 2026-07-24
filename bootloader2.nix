@@ -1,10 +1,12 @@
 #!/usr/bin/env -S sh -c 'awk \'f{print} $0=="#runhere"{f=1}\' "$0" | unshare -m'
-{ pkgs, ... }:
+{ pkgs, config, ... }:
 let
 
-  res-sys = with pkgs; writeShellScriptBin cmdrbb (builtins.readFile ./reset-system.sh);
+  res-sys = with pkgs; writeScriptBin cmdrbb (builtins.readFile ./reset-system.sh);
   cmdrbb = "rebuild-boot";
-  rb-uw = with pkgs; writeShellScript "rebuild-boot-unwrapped" ''
+  rb-uw = with pkgs; writeScript cmdrbb rb-script;
+  rb-script = ''
+    #!/usr/bin/env -S sh -c 'cat $0 | unshare -m'
 #runhere
     PATH=$PATH:${efibootmgr}/bin:${sbctl}/bin:${nix}/bin:${gnugrep}/bin
     echo updating system...;
@@ -26,10 +28,11 @@ let
     echo ...done;
     exit 0;
   '';
-  rb = with pkgs; writeShellScriptBin "rebuild-boot" "unshare -m ${rb-uw}";
+  rb = with pkgs; writeScriptBin cmdrbb rb-script;
 in
 {
-  config.system.build.nixos-rebuild = lib.mkForce "${rb}/bin/${cmdrbb}";
+  config.system.build.nixos-rebuild = lib.mkForce "${rb-uw}";
   environment.systemPackages = [ rb res-sys ];
   system.tools.nixos-rebuild.enable = false;
+  system.extraDependencies = [ config.huskyos.old ];
 }
