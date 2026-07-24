@@ -12,25 +12,28 @@
           btrfs-device = "${selfArg.outPath}/BTR";
           efi-device = "${selfArg.outPath}/EFI";
           swap-device = "${selfArg.outPath}/SWP";
-          hardware-configuration = "${selfArg.outPath}/hardware-configuration.nix";
+          hardware-configuration = selfArg.outPath/hardware-configuration.nix;
           extra-config = fileThatExistsElse "${selfArg.outPath}/config.nix" { };
 
           fileThatExistsMapElse =
             fPath: mapFileFunction: els:
-            if (builtins.pathExists fPath) && (builtins.readFileType fPath == "regular") then
-              (mapFileFunction fPath)
-            else
-              els;
+            if (builtins.pathExists fPath) && (builtins.readFileType fPath == "regular") then (mapFileFunction fPath) else els;
           fileThatExistsElse = fPath: els: fileThatExistsMapElse (_: _) els;
           firstLine = text: (builtins.head (builtins.split "\n" (builtins.readFile text)));
           firstLineOfFileElse = fPath: els: (fileThatExistsMapElse fPath firstLine els);
 
+          hwConf = { pkgs, lib, config, modulesPath, ... }: (
+              (import ./hardware-configuration.nix { inherit pkgs lib config modulesPath; }) // {
+                fileSystems = { };
+              }
+            );
+
           buildArg = {
             modules = [
-              hardware-configuration
+              hwConf
               ./filesystems.nix
               ./configuration.nix
-              in {
+              {
                 huskyos.oldSystem = selfArg.outPath/old;
                 huskyos.btrfsDevice = builtins.readFile btrfs-device;
                 huskyos.efiDevice = builtins.readFile efi-device;
